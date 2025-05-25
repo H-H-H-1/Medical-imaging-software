@@ -1,0 +1,106 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake Configure",
+            "type": "shell",
+            "command": "cmake",            "args": [
+                "-B", "build",
+                "-S", ".",
+                "-G", "Visual Studio 15 2017",
+                "-A", "x64",
+                "-DCMAKE_PREFIX_PATH=C:/Qt/Qt5.12.0/5.12.0/msvc2017_64;D:/VTK/VTK"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake Build",
+            "type": "shell", 
+            "command": "cmake",
+            "args": [
+                "--build", "build",
+                "--config", "Debug"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": "CMake Configure",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },            "problemMatcher": ["$msCompile"]
+        },        {
+            "label": "CMake Configure (Clang)",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x64 && cmake -B build-clang -S . -G \"NMake Makefiles\" -DCMAKE_C_COMPILER=\"C:/Program Files/LLVM/bin/clang.exe\" -DCMAKE_CXX_COMPILER=\"C:/Program Files/LLVM/bin/clang++.exe\" \"-DCMAKE_PREFIX_PATH=C:/Qt/Qt5.12.0/5.12.0/msvc2017_64;D:/VTK/VTK\" -DCMAKE_BUILD_TYPE=Debug"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake Build (Clang)",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x64 && cmake --build build-clang --config Debug"
+            ],
+            "group": "build",
+            "dependsOn": "CMake Configure (Clang)",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Compile Single File (Clang)",
+            "type": "shell",
+            "command": "C:/Program Files/LLVM/bin/clang++.exe",
+            "args": [
+                "-std=c++17",
+                "-IC:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include",
+                "-IC:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtCore",
+                "-IC:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtWidgets",
+                "-IC:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtGui",
+                "-I${workspaceFolder}/src",
+                "-DQT_CORE_LIB",
+                "-DQT_GUI_LIB",
+                "-DQT_WIDGETS_LIB",
+                "-fms-compatibility-version=19.16",
+                "-fms-extensions",
+                "-fsyntax-only",
+                "${file}"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": ["$gcc"]
+        }
+    ]
+}

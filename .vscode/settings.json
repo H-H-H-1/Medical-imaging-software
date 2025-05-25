@@ -1,0 +1,72 @@
+{
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/src/**",
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/**",
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtCore/**",
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtWidgets/**", 
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtGui/**",
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtOpenGL/**",
+        "D:/VTK/VTK/include"
+    ],
+    "C_Cpp.default.defines": [
+        "QT_CORE_LIB",
+        "QT_GUI_LIB", 
+        "QT_WIDGETS_LIB",
+        "QT_OPENGL_LIB",
+        "_USE_MATH_DEFINES",
+        "Q_MOC_RUN",
+        "_WIN32",
+        "_MSC_VER=1916"
+    ],
+    "C_Cpp.default.compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Professional/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.errorSquiggles": "enabled",    "C_Cpp.default.configurationProvider": "",
+    "C_Cpp.activeConfigName": "Win32-MSVC",
+    "C_Cpp.configurationWarnings": "enabled",
+    "C_Cpp.intelliSenseUpdateDelay": 1000,    "files.associations": {
+        "*.h": "cpp",
+        "*.hpp": "cpp", 
+        "*.cpp": "cpp",
+        "*.cc": "cpp",
+        "*.cxx": "cpp",
+        "*.c++": "cpp",
+        "MainWindow.h": "cpp",
+        "DataModel.h": "cpp",
+        "PluginInterface.h": "cpp",
+        "src/GUI/MainWindow.h": "cpp",
+        "GUI/MainWindow.h": "cpp",
+        "**/MainWindow.h": "cpp",
+        "qobject": "cpp",
+        "qwidget": "cpp",
+        "qstring": "cpp",
+        "qapplication": "cpp",
+        "qmainwindow": "cpp",
+        "qvariant": "cpp",
+        "qvariantmap": "cpp"
+    },    "C_Cpp.autoAddFileAssociations": false,
+    "C_Cpp.intelliSenseEngineFallback": "disabled",
+    "C_Cpp.vcFormat.wrap.preserveBlocks": "never",
+    "C_Cpp.clang_format_fallbackStyle": "Visual Studio",
+    "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true,
+    "C_Cpp.default.systemIncludePath": [
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include",
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtCore",
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtWidgets",
+        "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64/include/QtGui"
+    ],
+    "cmake.configureSettings": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64;D:/VTK/VTK"
+    },
+    "cmake.generator": "Visual Studio 16 2019",
+    "[cpp]": {
+        "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+        "C_Cpp.default.cppStandard": "c++17"
+    },
+    "[c]": {
+        "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+        "C_Cpp.default.cStandard": "c17"
+    }
+}
