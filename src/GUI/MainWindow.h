@@ -1,9 +1,10 @@
-// This file is C++
+﻿// This file is C++
 #pragma once
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QCloseEvent>
 #include <memory>
 
 class DataModel;
@@ -13,7 +14,7 @@ class ViewportWidget;
 class ParameterPanel;
 
 /**
- * @brief 主窗口类，应用程序的主界面
+ * @brief 涓荤獥鍙ｇ被锛屽簲鐢ㄧ▼搴忕殑涓荤晫闈?
  */
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -26,21 +27,21 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
-    // 文件操作
+    // 鏂囦欢鎿嶄綔
     void openFile();
     void saveFile();
     void exportImage();
     void exit();
 
-    // 编辑操作
+    // 缂栬緫鎿嶄綔
     void resetView();
     void resetParameters();
 
-    // 帮助操作
+    // 甯姪鎿嶄綔
     void showAbout();
     void showHelp();
 
-    // 数据变化响应
+    // 鏁版嵁鍙樺寲鍝嶅簲
     void onImageDataChanged();
     void onMetaDataChanged();
 

@@ -1,4 +1,4 @@
-#ifndef PLUGINMANAGER_H
+﻿#ifndef PLUGINMANAGER_H
 #define PLUGINMANAGER_H
 
 #include <QObject>
@@ -15,9 +15,9 @@ class VisualizationPlugin;
 class MeasurementPlugin;
 
 /**
- * @brief 插件管理器类
+ * @brief 鎻掍欢绠＄悊鍣ㄧ被
  * 
- * 负责加载、管理和协调所有插件的生命周期
+ * 璐熻矗鍔犺浇銆佺鐞嗗拰鍗忚皟鎵€鏈夋彃浠剁殑鐢熷懡鍛ㄦ湡
  */
 class PluginManager : public QObject {
     Q_OBJECT
@@ -26,33 +26,33 @@ public:
     static PluginManager& instance();
     ~PluginManager();
 
-    // 插件加载和卸载
+    // 鎻掍欢鍔犺浇鍜屽嵏杞?
     bool loadPlugin(const QString& filePath);
     bool loadPluginsFromDirectory(const QString& directory);
     void unloadPlugin(const QString& pluginName);
     void unloadAllPlugins();
 
-    // 插件查询
+    // 鎻掍欢鏌ヨ
     QStringList getLoadedPlugins() const;
     QStringList getAvailablePlugins(const QString& directory) const;
     PluginInterface* getPlugin(const QString& name) const;
     
-    // 类型化插件访问
+    // 绫诲瀷鍖栨彃浠惰闂?
     QList<ImageProcessingPlugin*> getImageProcessingPlugins() const;
     QList<VisualizationPlugin*> getVisualizationPlugins() const;
     QList<MeasurementPlugin*> getMeasurementPlugins() const;
 
-    // 插件信息
+    // 鎻掍欢淇℃伅
     QString getPluginInfo(const QString& name) const;
     bool isPluginLoaded(const QString& name) const;
     QString getPluginVersion(const QString& name) const;
 
-    // 插件目录管理
+    // 鎻掍欢鐩綍绠＄悊
     void addPluginDirectory(const QString& directory);
     void removePluginDirectory(const QString& directory);
     QStringList getPluginDirectories() const;
 
-    // 错误处理
+    // 閿欒澶勭悊
     QString getLastError() const;
     bool hasError() const;
 

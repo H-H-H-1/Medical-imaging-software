@@ -1,17 +1,17 @@
-#include "ViewportWidget.h"
+﻿#include "ViewportWidget.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QSlider>
 #include <QSpinBox>
 #include <QPushButton>
-#include <QGroupBox>
+#include    std::cout << "VTK未找到，使用占位符实现" << std::endl;<QGroupBox>
 #include <QGridLayout>
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <iostream>
 
-// VTK includes (条件编译以避免编译错误)
+// VTK includes (鏉′欢缂栬瘧浠ラ伩鍏嶇紪璇戦敊璇?
 #ifdef VTK_FOUND
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
@@ -25,7 +25,7 @@
 #include <vtkInteractorStyleImage.h>
 #include <QVTKOpenGLNativeWidget.h>
 #else
-// 空的替代类以避免编译错误
+// 绌虹殑鏇夸唬绫讳互閬垮厤缂栬瘧閿欒
 class vtkRenderWindow {};
 class vtkRenderWindowInteractor {};
 class vtkRenderer {};
@@ -49,7 +49,7 @@ struct ViewportWidget::Impl {
     vtkImageViewer2* imageViewer;
     vtkImageData* currentImageData;
     
-    // UI控件
+    // UI鎺т欢
     QLabel* sliceLabel;
     QSlider* sliceSlider;
     QSpinBox* sliceSpinBox;
@@ -57,7 +57,7 @@ struct ViewportWidget::Impl {
     QLabel* zoomLabel;
     QLabel* positionLabel;
     
-    // 状态变量
+    // 鐘舵€佸彉閲?
     int currentSlice;
     int sliceCount;
     double windowWidth;
@@ -100,17 +100,17 @@ void ViewportWidget::setupUI() {
     mainLayout->setContentsMargins(2, 2, 2, 2);
     mainLayout->setSpacing(2);
     
-    // VTK渲染窗口
+    // VTK娓叉煋绐楀彛
     d->vtkWidget = new QVTKOpenGLNativeWidget(this);
     d->vtkWidget->setMinimumSize(300, 200);
     mainLayout->addWidget(d->vtkWidget, 1);
     
-    // 控制面板
-    auto* controlPanel = new QGroupBox("视图控制", this);
+    // 鎺у埗闈㈡澘
+    auto* controlPanel = new QGroupBox("瑙嗗浘鎺у埗", this);
     auto* controlLayout = new QGridLayout(controlPanel);
     
-    // 切片控制
-    controlLayout->addWidget(new QLabel("切片:"), 0, 0);
+    // 鍒囩墖鎺у埗
+    controlLayout->addWidget(new QLabel("鍒囩墖:"), 0, 0);
     d->sliceSlider = new QSlider(Qt::Horizontal, this);
     d->sliceSlider->setRange(0, 0);
     d->sliceSlider->setValue(0);
@@ -123,56 +123,56 @@ void ViewportWidget::setupUI() {
     d->sliceLabel = new QLabel("0/0", this);
     controlLayout->addWidget(d->sliceLabel, 0, 3);
     
-    // 复位按钮
-    auto* resetButton = new QPushButton("复位视图", this);
+    // 澶嶄綅鎸夐挳
+    auto* resetButton = new QPushButton("澶嶄綅瑙嗗浘", this);
     controlLayout->addWidget(resetButton, 0, 4);
     
-    // 信息显示
-    d->windowLevelLabel = new QLabel("窗宽/窗位: 255/127", this);
+    // 淇℃伅鏄剧ず
+    d->windowLevelLabel = new QLabel("绐楀/绐椾綅: 255/127", this);
     controlLayout->addWidget(d->windowLevelLabel, 1, 0, 1, 2);
     
-    d->zoomLabel = new QLabel("缩放: 100%", this);
+    d->zoomLabel = new QLabel("缂╂斁: 100%", this);
     controlLayout->addWidget(d->zoomLabel, 1, 2, 1, 2);
     
-    d->positionLabel = new QLabel("位置: (0, 0) 值: 0", this);
+    d->positionLabel = new QLabel("浣嶇疆: (0, 0) 鍊? 0", this);
     controlLayout->addWidget(d->positionLabel, 2, 0, 1, 5);
     
     mainLayout->addWidget(controlPanel);
     
-    // 连接按钮信号
+    // 杩炴帴鎸夐挳淇″彿
     connect(resetButton, &QPushButton::clicked, this, &ViewportWidget::resetView);
 }
 
 void ViewportWidget::setupVTK() {
 #ifdef VTK_FOUND
     try {
-        // 创建VTK组件
+        // 鍒涘缓VTK缁勪欢
         d->renderWindow = vtkRenderWindow::New();
         d->renderer = vtkRenderer::New();
         d->imageViewer = vtkImageViewer2::New();
         
-        // 设置渲染窗口
+        // 璁剧疆娓叉煋绐楀彛
         d->vtkWidget->setRenderWindow(d->renderWindow);
         d->renderWindow->AddRenderer(d->renderer);
         
-        // 设置背景色
+        // 璁剧疆鑳屾櫙鑹?
         d->renderer->SetBackground(0.1, 0.1, 0.1);
         
-        // 设置图像查看器
+        // 璁剧疆鍥惧儚鏌ョ湅鍣?
         d->imageViewer->SetRenderWindow(d->renderWindow);
         d->imageViewer->SetRenderer(d->renderer);
         
-        std::cout << "VTK组件初始化成功" << std::endl;
+        std::cout << "VTK缁勪欢鍒濆鍖栨垚鍔? << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "VTK初始化失败: " << e.what() << std::endl;
+        std::cerr << "VTK鍒濆鍖栧け璐? " << e.what() << std::endl;
     }
 #else
-    std::cout << "VTK未找到，使用占位符实现" << std::endl;
+    std::cout << "VTK鏈壘鍒帮紝浣跨敤鍗犱綅绗﹀疄鐜? << std::endl;
 #endif
 }
 
 void ViewportWidget::connectSignals() {
-    // 连接切片控制信号
+    // 杩炴帴鍒囩墖鎺у埗淇″彿
     connect(d->sliceSlider, QOverload<int>::of(&QSlider::valueChanged),
             this, &ViewportWidget::onSliceChanged);
     connect(d->sliceSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -187,7 +187,7 @@ void ViewportWidget::setImageData(vtkImageData* imageData) {
         try {
             d->imageViewer->SetInputData(imageData);
             
-            // 获取图像尺寸
+            // 鑾峰彇鍥惧儚灏哄
             int* dims = imageData->GetDimensions();
             int sliceCount = 0;
             
@@ -213,7 +213,7 @@ void ViewportWidget::setImageData(vtkImageData* imageData) {
             d->sliceSlider->setRange(0, sliceCount - 1);
             d->sliceSpinBox->setRange(0, sliceCount - 1);
             
-            // 设置初始切片到中间
+            // 璁剧疆鍒濆鍒囩墖鍒颁腑闂?
             int middleSlice = sliceCount / 2;
             setSlicePosition(middleSlice);
             
@@ -221,7 +221,7 @@ void ViewportWidget::setImageData(vtkImageData* imageData) {
             fitToWindow();
             
         } catch (const std::exception& e) {
-            std::cerr << "设置图像数据失败: " << e.what() << std::endl;
+            std::cerr << "璁剧疆鍥惧儚鏁版嵁澶辫触: " << e.what() << std::endl;
         }
     }
 #endif
@@ -258,7 +258,7 @@ void ViewportWidget::fitToWindow() {
 void ViewportWidget::setViewType(ViewType type) {
     d->viewType = type;
     if (d->currentImageData) {
-        setImageData(d->currentImageData); // 重新设置以应用新的视图类型
+        setImageData(d->currentImageData); // 閲嶆柊璁剧疆浠ュ簲鐢ㄦ柊鐨勮鍥剧被鍨?
     }
 }
 
@@ -278,7 +278,7 @@ void ViewportWidget::setSlicePosition(int slice) {
     }
 #endif
     
-    // 更新UI控件
+    // 鏇存柊UI鎺т欢
     d->sliceSlider->blockSignals(true);
     d->sliceSpinBox->blockSignals(true);
     d->sliceSlider->setValue(slice);
@@ -332,7 +332,7 @@ void ViewportWidget::setZoom(double zoom) {
     }
 #endif
     
-    d->zoomLabel->setText(QString("缩放: %1%").arg(static_cast<int>(zoom * 100)));
+    d->zoomLabel->setText(QString("缂╂斁: %1%").arg(static_cast<int>(zoom * 100)));
     emit zoomChanged(zoom);
 }
 
@@ -369,7 +369,7 @@ void ViewportWidget::updateSliceInfo() {
 }
 
 void ViewportWidget::updateWindowLevelInfo() {
-    d->windowLevelLabel->setText(QString("窗宽/窗位: %1/%2")
+    d->windowLevelLabel->setText(QString("绐楀/绐椾綅: %1/%2")
                                 .arg(static_cast<int>(d->windowWidth))
                                 .arg(static_cast<int>(d->windowLevel)));
 }

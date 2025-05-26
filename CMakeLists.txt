@@ -20,9 +20,9 @@ endif()
 # 设置Qt和VTK路径
 set(CMAKE_PREFIX_PATH "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64")
 # 添加VTK路径
-list(APPEND CMAKE_PREFIX_PATH "D:/VTK/VTK")
+list(APPEND CMAKE_PREFIX_PATH "D:/VTK/install")
 
-# 查找Qt5 - 添加更详细的组件
+# 查找Qt5 - 与VTK版本保持一致
 find_package(Qt5 REQUIRED COMPONENTS
     Core 
     Widgets 
