@@ -1,14 +1,16 @@
 {
     "version": "2.0.0",
-    "tasks": [        {
+    "tasks": [
+        {
             "label": "CMake Configure",
             "type": "shell",
-            "command": "cmake",            "args": [
+            "command": "cmake",
+            "args": [
                 "-B", "build",
                 "-S", ".",
                 "-G", "Visual Studio 16 2019",
                 "-A", "x64",
-                "-DCMAKE_PREFIX_PATH=C:/Qt/Qt5.12.0/5.12.0/msvc2017_64;D:/VTK/install"
+                "-DCMAKE_PREFIX_PATH=C:/Qt/Qt5.12.0/5.12.0/msvc2017_64;D:/VTK/VTK"
             ],
             "group": "build",
             "presentation": {
@@ -105,5 +107,42 @@
             },
             "problemMatcher": ["$gcc"]
         },
+        {
+            "label": "Clean Build Directory",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "if (Test-Path 'build') { Remove-Item -Recurse -Force 'build'; Write-Host 'Build directory cleaned' } else { Write-Host 'Build directory does not exist' }"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean and Rebuild Project",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Clean Build Directory",
+                "CMake Configure",
+                "CMake Build"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
     ]
 }

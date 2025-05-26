@@ -10,51 +10,49 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(WIN32)
     add_compile_definitions(_USE_MATH_DEFINES)
     if(MSVC)
-        add_compile_options(/W3)
-        # 添加Qt特定的编译选项
-        add_compile_options(/permissive-)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
+        add_compile_options(/W3 /permissive- /Zc:__cplusplus)
     endif()
 endif()
 
-# 设置Qt和VTK路径
-set(CMAKE_PREFIX_PATH "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64")
-# 添加VTK路径
-list(APPEND CMAKE_PREFIX_PATH "D:/VTK/install")
-
-# 查找Qt5 - 与VTK版本保持一致
-find_package(Qt5 REQUIRED COMPONENTS
-    Core 
-    Widgets 
-    Gui 
-    OpenGL
-    PrintSupport  # 如果需要打印支持
+# 设置Qt和VTK的路径 (根据您的实际安装路径修改)
+set(CMAKE_PREFIX_PATH
+    "C:/Qt/Qt5.12.0/5.12.0/msvc2017_64"  # Qt路径
+    "D:/VTK/VTK"                         # VTK路径
 )
 
-# 查找VTK
-find_package(VTK REQUIRED)
-
-if(VTK_VERSION VERSION_LESS "8.90.0")
-    include(${VTK_USE_FILE})
-else()
-    message(STATUS "VTK Version: ${VTK_VERSION}")
-endif()
-
-# 查找OpenGL
-find_package(OpenGL REQUIRED)
-
-# 启用Qt MOC自动处理 - 这很重要！
+# 启用Qt MOC, UIC, RCC自动处理
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# 设置Qt的可执行文件属性（Windows特定）
-if(WIN32)
-    set(CMAKE_WIN32_EXECUTABLE ON)
-endif()
+# 查找Qt5
+find_package(Qt5 REQUIRED COMPONENTS
+    Core 
+    Widgets 
+    Gui
+    OpenGL
+)
 
-# 添加子目录
+# 查找VTK
+find_package(VTK REQUIRED COMPONENTS
+    RenderingOpenGL2
+    InteractionStyle
+    IOImage
+    ImagingCore
+    CommonCore
+    # 根据需要添加更多VTK组件
+)
+include(${VTK_USE_FILE})
+
+# 查找OpenGL
+find_package(OpenGL REQUIRED)
+
+# 添加子目录 (src目录)
 add_subdirectory(src)
+
+# 设置输出目录
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 # 如果需要安装Qt DLL文件（调试时很有用）
 if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")

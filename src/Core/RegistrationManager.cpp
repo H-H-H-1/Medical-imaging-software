@@ -3,7 +3,10 @@
 #include <vtkMatrix4x4.h>
 #include <vtkSmartPointer.h>
 
-class RegistrationManager::RegistrationManagerPrivate {
+class RegistrationManager::RegistrationManagerPrivate : public QObject {
+    Q_OBJECT // 添加 Q_OBJECT 宏以启用信号和槽机制
+
+    // 私有成员变量可以在这里声明
 public:
     vtkSmartPointer<vtkImageData> fixedImage;
     vtkSmartPointer<vtkImageData> movingImage;

@@ -14,9 +14,19 @@
 #include <QTabWidget>
 #include <QFileDialog>
 #include <QDebug>
+#include <QLineEdit>
 #include <memory>
 
-struct ParameterPanel::Impl {
+namespace MedicalImaging{
+
+
+struct ParameterPanelPrivate {
+    // 修正构造函数
+    explicit ParameterPanelPrivate(ParameterPanel* parent) : q_ptr(parent) {}
+    
+    ParameterPanel* q_ptr;
+    Q_DECLARE_PUBLIC(ParameterPanel) ;
+
     // 窗宽窗位控件
     QSlider* windowSlider = nullptr;
     QSlider* levelSlider = nullptr;
@@ -90,6 +100,7 @@ struct ParameterPanel::Impl {
 
     int currentSlice = 0;
     int maxSlice = 100; // 默认值，应由外部设置
+    int minSlice = 0;   // 默认值，应由外部设置
     double currentZoom = 1.0;
 
     double currentLowerThreshold = 0.0;
@@ -102,20 +113,19 @@ struct ParameterPanel::Impl {
 
     double currentGaussianSigma = 1.0;
     int currentGaussianKernelSize = 3; // Default Gaussian kernel
-    int currentMedianKernelSize = 3;   // Default Median kernel
-
-    // QString currentRegistrationMethod = "ICP"; // Renamed to currentRegAlgorithm
+    int currentMedianKernelSize = 3;   // Default Median kernel    // QString currentRegistrationMethod = "ICP"; // Renamed to currentRegAlgorithm
     // double currentRegistrationTolerance = 0.01;
     QString currentFixedImageFile;
     QString currentMovingImageFile;
     QString currentRegAlgorithm = "ICP";
 
 
-    Impl() = default;
+
 };
 
 ParameterPanel::ParameterPanel(QWidget* parent)
-    : QWidget(parent), d(std::make_unique<Impl>()) {
+    : QWidget(parent), d_ptr(new ParameterPanelPrivate(this)) {
+
     setupUI();
     connectSignals();
     updateDisplay();
@@ -124,6 +134,8 @@ ParameterPanel::ParameterPanel(QWidget* parent)
 ParameterPanel::~ParameterPanel() = default;
 
 void ParameterPanel::setupUI() {
+    Q_D(ParameterPanel);
+    
     setFixedWidth(300); // 稍微加宽以容纳标签页和控件
     
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -198,8 +210,9 @@ QWidget* ParameterPanel::createRenderingTab() {
     return tab;
 }
 
-
 QGroupBox* ParameterPanel::createWindowLevelGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("窗宽窗位", this);
     QGridLayout* layout = new QGridLayout(group);
     
@@ -228,11 +241,12 @@ QGroupBox* ParameterPanel::createWindowLevelGroup() {
     d->levelSpinBox->setValue(d->currentLevel);
     d->levelSpinBox->setSuffix(" HU");
     layout->addWidget(d->levelSpinBox, 1, 2);
-    
-    return group;
+      return group;
 }
 
 QGroupBox* ParameterPanel::createSliceGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("切片控制", this);
     QGridLayout* layout = new QGridLayout(group);
     
@@ -248,13 +262,16 @@ QGroupBox* ParameterPanel::createSliceGroup() {
     d->sliceSpinBox->setValue(d->currentSlice);
     layout->addWidget(d->sliceSpinBox, 0, 2);
     
-    d->sliceInfoLabel = new QLabel(QString("%1 / %2").arg(d->currentSlice).arg(d->maxSlice));
+    // 切片信息标签
+    d->sliceInfoLabel = new QLabel(QString("切片 %1/%2").arg(d->currentSlice).arg(d->maxSlice));
     layout->addWidget(d->sliceInfoLabel, 1, 0, 1, 3);
     
     return group;
 }
 
 QGroupBox* ParameterPanel::createZoomGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("缩放控制", this);
     QGridLayout* layout = new QGridLayout(group);
     
@@ -284,6 +301,8 @@ QGroupBox* ParameterPanel::createZoomGroup() {
 }
 
 QGroupBox* ParameterPanel::createViewGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("视图控制", this);
     QVBoxLayout* layout = new QVBoxLayout(group);
     
@@ -308,6 +327,8 @@ QGroupBox* ParameterPanel::createViewGroup() {
 }
 
 QGroupBox* ParameterPanel::createThresholdGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("阈值分割", this);
     QGridLayout* layout = new QGridLayout(group);
 
@@ -337,6 +358,8 @@ QGroupBox* ParameterPanel::createThresholdGroup() {
 }
 
 QGroupBox* ParameterPanel::createFilterOptionsGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("滤波选项", this);
     QGridLayout* layout = new QGridLayout(group);
     layout->setColumnStretch(1, 1); // Allow spinboxes/lineedits to expand
@@ -389,6 +412,8 @@ QGroupBox* ParameterPanel::createFilterOptionsGroup() {
 }
 
 QGroupBox* ParameterPanel::createRegistrationParamsGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("配准参数", this);
     QGridLayout* layout = new QGridLayout(group);
     layout->setColumnStretch(1, 1);
@@ -427,6 +452,8 @@ QGroupBox* ParameterPanel::createRegistrationParamsGroup() {
 }
 
 QGroupBox* ParameterPanel::createImageProcessingGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("图像效果", this);
     QGridLayout* layout = new QGridLayout(group);
     layout->setColumnStretch(1, 1); // Allow sliders to expand more
@@ -471,6 +498,8 @@ QGroupBox* ParameterPanel::createImageProcessingGroup() {
 }
 
 QGroupBox* ParameterPanel::createMeasurementGroup() {
+    Q_D(ParameterPanel);
+    
     QGroupBox* group = new QGroupBox("测量工具", this);
     QVBoxLayout* layout = new QVBoxLayout(group);
     
@@ -501,48 +530,45 @@ QGroupBox* ParameterPanel::createMeasurementGroup() {
 }
 
 void ParameterPanel::connectSignals() {
+    Q_D(ParameterPanel);
+    
     // 窗宽窗位信号连接
     connect(d->windowSlider, &QSlider::valueChanged, this, &ParameterPanel::onWindowChanged);
     connect(d->windowSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), 
-            this, [this](double value) {
+            this, [this, d](double value) {
         d->currentWindow = value;
         d->windowSlider->setValue(static_cast<int>(value)); // 同步Slider
         emit windowLevelChanged(d->currentWindow, d->currentLevel);
     });
     
-    connect(d->levelSlider, &QSlider::valueChanged, this, &ParameterPanel::onLevelChanged);
-    connect(d->levelSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), 
-            this, [this](double value) {
+    connect(d->levelSlider, &QSlider::valueChanged, this, &ParameterPanel::onLevelChanged);    connect(d->levelSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), 
+            this, [this, d](double value) {
         d->currentLevel = value;
         d->levelSlider->setValue(static_cast<int>(value)); // 同步Slider
         emit windowLevelChanged(d->currentWindow, d->currentLevel);
     });
-    
-    // 切片信号连接
-    connect(d->sliceSlider, &QSlider::valueChanged, this, [this](int value) {
+      // 切片信号连接
+    connect(d->sliceSlider, &QSlider::valueChanged, this, [this, d](int value) {
         d->currentSlice = value;
         d->sliceSpinBox->setValue(value);
         updateSliceInfo();
         emit sliceChanged(value);
     });
-    
-    connect(d->sliceSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
-            this, [this](int value) {
+      connect(d->sliceSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            this, [this, d](int value) {
         d->currentSlice = value;
         d->sliceSlider->setValue(value);
         updateSliceInfo();
         emit sliceChanged(value);
     });
-    
-    // 缩放信号连接
-    connect(d->zoomSlider, &QSlider::valueChanged, this, [this](int value) {
+      // 缩放信号连接
+    connect(d->zoomSlider, &QSlider::valueChanged, this, [this, d](int value) {
         d->currentZoom = value / 100.0;
         d->zoomSpinBox->setValue(d->currentZoom);
         emit zoomChanged(d->currentZoom);
     });
-    
-    connect(d->zoomSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), 
-            this, [this](double value) {
+      connect(d->zoomSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), 
+            this, [this, d](double value) {
         d->currentZoom = value;
         d->zoomSlider->setValue(static_cast<int>(value * 100));
         emit zoomChanged(d->currentZoom);
@@ -571,7 +597,7 @@ void ParameterPanel::connectSignals() {
 
     // 透明度信号连接
     connect(d->opacitySlider, &QSlider::valueChanged, this, &ParameterPanel::onOpacitySliderChanged);
-    connect(d->opacitySpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double value){
+    connect(d->opacitySpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this, d](double value){
         d->currentOpacity = value;
         d->opacitySlider->setValue(static_cast<int>(value * 100));
         emit opacityChanged(d->currentOpacity);
@@ -579,7 +605,7 @@ void ParameterPanel::connectSignals() {
 
     // 阈值信号连接
     connect(d->lowerThresholdSlider, &QSlider::valueChanged, this, &ParameterPanel::onLowerThresholdChanged);
-    connect(d->lowerThresholdSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double value){
+    connect(d->lowerThresholdSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this, d](double value){
         d->currentLowerThreshold = value;
         d->lowerThresholdSlider->setValue(static_cast<int>(value));
         if (d->currentLowerThreshold > d->currentUpperThreshold) { // 确保下阈值不超过上阈值
@@ -591,7 +617,7 @@ void ParameterPanel::connectSignals() {
     });
 
     connect(d->upperThresholdSlider, &QSlider::valueChanged, this, &ParameterPanel::onUpperThresholdChanged);
-    connect(d->upperThresholdSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double value){
+    connect(d->upperThresholdSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this, d](double value){
         d->currentUpperThreshold = value;
         d->upperThresholdSlider->setValue(static_cast<int>(value));
          if (d->currentUpperThreshold < d->currentLowerThreshold) { // 确保上阈值不低于下阈值
@@ -604,14 +630,12 @@ void ParameterPanel::connectSignals() {
     
     // 滤波参数信号连接 (部分已在createFilterGroup中连接按钮)
     connect(d->gaussianSigmaSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &ParameterPanel::onSigmaDoubleSpinBoxChanged);
-    connect(d->gaussianKernelSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &ParameterPanel::onKernelSizeSpinBoxChanged);
-    connect(d->medianKernelSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value){
+    connect(d->gaussianKernelSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &ParameterPanel::onKernelSizeSpinBoxChanged);    connect(d->medianKernelSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, d](int value){
             d->currentMedianKernelSize = value;
             emit kernelSizeChanged(value); // Or a more specific signal if needed
-         });
-    // 配准参数信号连接
+         });    // 配准参数信号连接
     if(d->registrationAlgorithmCombo) { // 确保控件已创建
-        connect(d->registrationAlgorithmCombo, &QComboBox::currentTextChanged, this, [this](const QString& algorithm){
+        connect(d->registrationAlgorithmCombo, &QComboBox::currentTextChanged, this, [this, d](const QString& algorithm){
             d->currentRegAlgorithm = algorithm;
             emit registrationAlgorithmChanged(algorithm);
         });
@@ -627,10 +651,32 @@ void ParameterPanel::connectSignals() {
     connect(d->measureAreaButton, &QPushButton::clicked, this, [this]() {
         emit measurementToolSelected(Area);
     });
+    
+    // 修复滤波参数信号连接，添加缺失的信号连接
+    connect(d->filterTypeCombo, &QComboBox::currentTextChanged, this, &ParameterPanel::onFilterTypeComboChanged);
+    connect(d->applyFilterButton, &QPushButton::clicked, this, [this, d]() {
+        QString filterType = d->filterTypeCombo ? d->filterTypeCombo->currentText() : "";
+        if (filterType == "高斯滤波") {
+            onApplyGaussianFilter();
+        } else if (filterType == "中值滤波") {
+            onApplyMedianFilter();
+        } else if (filterType == "锐化滤波") {
+            onApplySharpenFilter();
+        }
+    });
+    
+    // 添加配准相关信号连接
+    connect(d->fixedImageBrowseButton, &QPushButton::clicked, this, &ParameterPanel::onFixedImageBrowse);
+    connect(d->movingImageBrowseButton, &QPushButton::clicked, this, &ParameterPanel::onMovingImageBrowse);
+    connect(d->startRegistrationButton, &QPushButton::clicked, this, &ParameterPanel::onStartRegistration);
+    connect(d->resetRegistrationButton, &QPushButton::clicked, this, &ParameterPanel::onResetRegistration);
 }
+
 
 // --- 实现 Public 方法 ---
 void ParameterPanel::setWindowLevel(double window, double level) {
+    Q_D(ParameterPanel);
+    
     d->currentWindow = window;
     d->currentLevel = level;
     
@@ -642,12 +688,14 @@ void ParameterPanel::setWindowLevel(double window, double level) {
 }
 
 void ParameterPanel::getWindowLevel(double& window, double& level) const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     window = d->currentWindow;
     level = d->currentLevel;
 }
 
 void ParameterPanel::setWindowLevelRange(double minWindow, double maxWindow,
                                        double minLevel, double maxLevel) {
+    Q_D(ParameterPanel);    
     d->minWindowRange = minWindow;
     d->maxWindowRange = maxWindow;
     d->minLevelRange = minLevel;
@@ -660,6 +708,7 @@ void ParameterPanel::setWindowLevelRange(double minWindow, double maxWindow,
 }
 
 void ParameterPanel::setThreshold(double lower, double upper) {
+    Q_D(ParameterPanel);
     d->currentLowerThreshold = lower;
     d->currentUpperThreshold = upper;
     if(d->lowerThresholdSlider) d->lowerThresholdSlider->setValue(static_cast<int>(lower));
@@ -669,11 +718,13 @@ void ParameterPanel::setThreshold(double lower, double upper) {
 }
 
 void ParameterPanel::getThreshold(double& lower, double& upper) const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     lower = d->currentLowerThreshold;
     upper = d->currentUpperThreshold;
 }
 
 void ParameterPanel::setThresholdRange(double minVal, double maxVal) {
+    Q_D(ParameterPanel);
     d->minThresholdRange = minVal;
     d->maxThresholdRange = maxVal;
     if(d->lowerThresholdSlider) d->lowerThresholdSlider->setRange(static_cast<int>(minVal), static_cast<int>(maxVal));
@@ -683,25 +734,30 @@ void ParameterPanel::setThresholdRange(double minVal, double maxVal) {
 }
 
 void ParameterPanel::setOpacity(double opacity) {
+    Q_D(ParameterPanel);
     d->currentOpacity = opacity;
     if(d->opacitySlider) d->opacitySlider->setValue(static_cast<int>(opacity * 100));
     if(d->opacitySpinBox) d->opacitySpinBox->setValue(opacity);
 }
 
 double ParameterPanel::getOpacity() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentOpacity;
 }
 
 void ParameterPanel::setColormap(const QString& colormapName) {
+    Q_D(ParameterPanel);    
     d->currentColormap = colormapName;
     if(d->colormapCombo) d->colormapCombo->setCurrentText(colormapName);
 }
 
 QString ParameterPanel::getColormap() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentColormap;
 }
 
 void ParameterPanel::setGaussianSigma(double sigma) {
+    Q_D(ParameterPanel);
     d->currentGaussianSigma = sigma;
     if(d->gaussianSigmaSpinBox) d->gaussianSigmaSpinBox->setValue(sigma);
     // emit sigmaChanged(sigma); // Emit when set programmatically
@@ -709,6 +765,7 @@ void ParameterPanel::setGaussianSigma(double sigma) {
 
 // Add setter for Gaussian Kernel Size
 void ParameterPanel::setGaussianKernelSize(int kernelSize) {
+    Q_D(ParameterPanel);
     d->currentGaussianKernelSize = kernelSize;
     if(d->gaussianKernelSizeSpinBox) d->gaussianKernelSizeSpinBox->setValue(kernelSize);
     // emit kernelSizeChanged(kernelSize); // Emit when set programmatically
@@ -716,6 +773,7 @@ void ParameterPanel::setGaussianKernelSize(int kernelSize) {
 
 // Modify setter for Median Radius to Median Kernel Size
 void ParameterPanel::setMedianKernelSize(int kernelSize) {
+    Q_D(ParameterPanel);
     d->currentMedianKernelSize = kernelSize;
     if(d->medianKernelSizeSpinBox) d->medianKernelSizeSpinBox->setValue(kernelSize);
     // emit kernelSizeChanged(kernelSize); // Emit when set programmatically
@@ -724,44 +782,53 @@ void ParameterPanel::setMedianKernelSize(int kernelSize) {
 // Getters
 // ... (getGaussianSigma already exists) ...
 int ParameterPanel::getGaussianKernelSize() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentGaussianKernelSize;
 }
 
 int ParameterPanel::getMedianKernelSize() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentMedianKernelSize;
 }
 
 void ParameterPanel::setFixedImageFile(const QString& filePath) {
+    Q_D(ParameterPanel);
     d->currentFixedImageFile = filePath;
     if(d->fixedImageLineEdit) d->fixedImageLineEdit->setText(filePath);
     // emit fixedImageChanged(filePath); // Emit when set programmatically
 }
 
 QString ParameterPanel::getFixedImageFile() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentFixedImageFile;
 }
 
 void ParameterPanel::setMovingImageFile(const QString& filePath) {
+    Q_D(ParameterPanel);
     d->currentMovingImageFile = filePath;
     if(d->movingImageLineEdit) d->movingImageLineEdit->setText(filePath);
     // emit movingImageChanged(filePath); // Emit when set programmatically
 }
 
 QString ParameterPanel::getMovingImageFile() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentMovingImageFile;
 }
 
 void ParameterPanel::setRegistrationAlgorithm(const QString& algorithm) {
+    Q_D(ParameterPanel);
     d->currentRegAlgorithm = algorithm;
     if(d->registrationAlgorithmCombo) d->registrationAlgorithmCombo->setCurrentText(algorithm);
     // emit registrationAlgorithmChanged(algorithm); // Emit when set programmatically
 }
 
 QString ParameterPanel::getRegistrationAlgorithm() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentRegAlgorithm;
 }
 
 void ParameterPanel::enableWindowLevelControls(bool enabled) {
+    Q_D(ParameterPanel);
     if(d->windowSlider) d->windowSlider->setEnabled(enabled);
     if(d->windowSpinBox) d->windowSpinBox->setEnabled(enabled);
     if(d->levelSlider) d->levelSlider->setEnabled(enabled);
@@ -769,6 +836,7 @@ void ParameterPanel::enableWindowLevelControls(bool enabled) {
 }
 
 void ParameterPanel::enableThresholdControls(bool enabled) {
+    Q_D(ParameterPanel);
     if(d->lowerThresholdSlider) d->lowerThresholdSlider->setEnabled(enabled);
     if(d->lowerThresholdSpinBox) d->lowerThresholdSpinBox->setEnabled(enabled);
     if(d->upperThresholdSlider) d->upperThresholdSlider->setEnabled(enabled);
@@ -776,6 +844,7 @@ void ParameterPanel::enableThresholdControls(bool enabled) {
 }
 
 void ParameterPanel::enableFilterControls(bool enabled) {
+    Q_D(ParameterPanel);
     if(d->filterTypeCombo) d->filterTypeCombo->setEnabled(enabled);
     if(d->gaussianSigmaSpinBox) d->gaussianSigmaSpinBox->setEnabled(enabled && d->filterTypeCombo && d->filterTypeCombo->currentText() == "高斯滤波");
     if(d->gaussianKernelSizeSpinBox) d->gaussianKernelSizeSpinBox->setEnabled(enabled && d->filterTypeCombo && d->filterTypeCombo->currentText() == "高斯滤波");
@@ -785,6 +854,7 @@ void ParameterPanel::enableFilterControls(bool enabled) {
 }
 
 void ParameterPanel::enableRegistrationControls(bool enabled) {
+    Q_D(ParameterPanel);
     if(d->fixedImageLineEdit) d->fixedImageLineEdit->setEnabled(enabled);
     if(d->fixedImageBrowseButton) d->fixedImageBrowseButton->setEnabled(enabled);
     if(d->movingImageLineEdit) d->movingImageLineEdit->setEnabled(enabled);
@@ -796,6 +866,8 @@ void ParameterPanel::enableRegistrationControls(bool enabled) {
 
 
 void ParameterPanel::setSliceRange(int min, int max) {
+    Q_D(ParameterPanel);
+    d->minSlice = min;
     d->maxSlice = max; // Assuming min is always 0 or handled by image data
     if (d->sliceSlider) d->sliceSlider->setRange(min, max);
     if (d->sliceSpinBox) d->sliceSpinBox->setRange(min, max);
@@ -803,6 +875,7 @@ void ParameterPanel::setSliceRange(int min, int max) {
 }
 
 void ParameterPanel::setSlicePosition(int slice) {
+    Q_D(ParameterPanel);
     d->currentSlice = slice;
     if (d->sliceSlider) d->sliceSlider->setValue(slice);
     if (d->sliceSpinBox) d->sliceSpinBox->setValue(slice);
@@ -810,32 +883,40 @@ void ParameterPanel::setSlicePosition(int slice) {
 }
 
 int ParameterPanel::getSlicePosition() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentSlice;
 }
 
 void ParameterPanel::setZoom(double zoom) {
+    Q_D(ParameterPanel);
     d->currentZoom = zoom;
     if (d->zoomSlider) d->zoomSlider->setValue(static_cast<int>(zoom * 100));
     if (d->zoomSpinBox) d->zoomSpinBox->setValue(zoom);
 }
 
 double ParameterPanel::getZoom() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->currentZoom;
 }
 
 void ParameterPanel::setViewType(int viewType) {
+    Q_D(ParameterPanel);
     if (d->viewTypeCombo) d->viewTypeCombo->setCurrentIndex(viewType);
 }
 
 int ParameterPanel::getViewType() const {
+    Q_D(const ParameterPanel);  // 修复：添加 const 关键字
     return d->viewTypeCombo ? d->viewTypeCombo->currentIndex() : 0;
 }
 
 void ParameterPanel::updateMeasurementResult(const QString& result) {
+    Q_D(ParameterPanel);
     if (d->measurementResultLabel) d->measurementResultLabel->setText(result);
 }
 
 void ParameterPanel::updateDisplay() {
+    Q_D(ParameterPanel);
+    // This method updates all UI elements based on the current state of d values.
     // Update all relevant controls based on current d values
     setWindowLevel(d->currentWindow, d->currentLevel);
     setSlicePosition(d->currentSlice); // This will also call updateSliceInfo
@@ -867,6 +948,7 @@ void ParameterPanel::updateDisplay() {
 }
 
 void ParameterPanel::updateSliceInfo() {
+    Q_D(ParameterPanel);    
     if (d->sliceInfoLabel) {
         d->sliceInfoLabel->setText(QString("%1 / %2").arg(d->currentSlice).arg(d->maxSlice));
     }
@@ -890,6 +972,8 @@ void ParameterPanel::onOpacityChanged(double opacity) {
 }
 
 void ParameterPanel::resetParameters() {
+    Q_D(ParameterPanel);
+    // This slot resets all parameters to their default values
     // Reset all parameters to default values and update UI
     // Example defaults:
     d->currentWindow = 400.0;
@@ -939,18 +1023,21 @@ void ParameterPanel::resetParameters() {
 
 // --- 实现 Private Slots ---
 void ParameterPanel::onWindowChanged(int value) {
+    Q_D(ParameterPanel);    
     d->currentWindow = static_cast<double>(value);
     if(d->windowSpinBox) d->windowSpinBox->setValue(d->currentWindow);
     emit windowChanged(d->currentWindow); // Emit only window
 }
 
 void ParameterPanel::onLevelChanged(int value) {
+    Q_D(ParameterPanel);    
     d->currentLevel = static_cast<double>(value);
     if(d->levelSpinBox) d->levelSpinBox->setValue(d->currentLevel);
     emit levelChanged(d->currentLevel); // Emit only level
 }
 
 void ParameterPanel::onLowerThresholdChanged(double value) {
+    Q_D(ParameterPanel);    
     d->currentLowerThreshold = value;
     // d->lowerThresholdSlider->setValue(static_cast<int>(value)); // Already connected if slider changes spinbox
     if (d->currentLowerThreshold > d->currentUpperThreshold) {
@@ -962,6 +1049,7 @@ void ParameterPanel::onLowerThresholdChanged(double value) {
 }
 
 void ParameterPanel::onUpperThresholdChanged(double value) {
+    Q_D(ParameterPanel);    
     d->currentUpperThreshold = value;
     // d->upperThresholdSlider->setValue(static_cast<int>(value));
      if (d->currentUpperThreshold < d->currentLowerThreshold) {
@@ -973,18 +1061,21 @@ void ParameterPanel::onUpperThresholdChanged(double value) {
 }
 
 void ParameterPanel::onOpacitySliderChanged(int value) {
+    Q_D(ParameterPanel);    
     d->currentOpacity = value / 100.0;
     if(d->opacitySpinBox) d->opacitySpinBox->setValue(d->currentOpacity);
     emit opacityChanged(d->currentOpacity);
 }
 
 void ParameterPanel::onColormapChanged(const QString& colormapName) {
+    Q_D(ParameterPanel);    
     d->currentColormap = colormapName;
     emit colormapChanged(d->currentColormap); // Ensure this signal takes QString
 }
 
 // Slots for new filter controls
 void ParameterPanel::onFilterTypeComboChanged(const QString& filterType) {
+    Q_D(ParameterPanel);    
     bool isGaussian = (filterType == "高斯滤波");
     bool isMedian = (filterType == "中值滤波");
     // bool isSharpen = (filterType == "锐化滤波"); // Sharpen might not have params
@@ -1001,6 +1092,7 @@ void ParameterPanel::onFilterTypeComboChanged(const QString& filterType) {
 }
 
 void ParameterPanel::onKernelSizeSpinBoxChanged(int value) {
+    Q_D(ParameterPanel);
     // This could be generic if only one kernel size is active at a time,
     // or specific if Gaussian and Median kernels are different.
     // Based on current setup, d->filterTypeCombo determines which kernel is relevant.
@@ -1016,12 +1108,15 @@ void ParameterPanel::onKernelSizeSpinBoxChanged(int value) {
 }
 
 void ParameterPanel::onSigmaDoubleSpinBoxChanged(double value) {
+    Q_D(ParameterPanel);  
     d->currentGaussianSigma = value;
     emit sigmaChanged(value);
 }
 
 // Slots for new registration controls
 void ParameterPanel::onFixedImageBrowse() {
+    Q_D(ParameterPanel);
+    
     QString filePath = QFileDialog::getOpenFileName(this, "选择固定图像文件", "", "图像文件 (*.png *.jpg *.bmp *.dcm *.nii *.nii.gz);;所有文件 (*)");
     if (!filePath.isEmpty()) {
         d->currentFixedImageFile = filePath;
@@ -1031,6 +1126,8 @@ void ParameterPanel::onFixedImageBrowse() {
 }
 
 void ParameterPanel::onMovingImageBrowse() {
+    Q_D(ParameterPanel);
+    
     QString filePath = QFileDialog::getOpenFileName(this, "选择移动图像文件", "", "图像文件 (*.png *.jpg *.bmp *.dcm *.nii *.nii.gz);;所有文件 (*)");
     if (!filePath.isEmpty()) {
         d->currentMovingImageFile = filePath;
@@ -1040,38 +1137,44 @@ void ParameterPanel::onMovingImageBrowse() {
 }
 
 void ParameterPanel::onRegAlgorithmComboChanged(const QString& algorithm) {
+    Q_D(ParameterPanel);
+    
     d->currentRegAlgorithm = algorithm;
     emit registrationAlgorithmChanged(algorithm);
 }
 
 
 // --- 实现 Public Slots ---
+
 void ParameterPanel::onApplyGaussianFilter() {
+    Q_D(ParameterPanel);
+    
     qDebug() << "ParameterPanel: Apply Gaussian Filter requested. Sigma: " << d->currentGaussianSigma << " Kernel: " << d->currentGaussianKernelSize;
     emit gaussianFilterRequested(d->currentGaussianSigma, d->currentGaussianKernelSize);
 }
 
 void ParameterPanel::onApplyMedianFilter() {
+    Q_D(ParameterPanel);
+    
      qDebug() << "ParameterPanel: Apply Median Filter requested. Kernel: " << d->currentMedianKernelSize;
     emit medianFilterRequested(d->currentMedianKernelSize);
 }
 
 void ParameterPanel::onApplySharpenFilter() {
+    Q_D(ParameterPanel);
+
     qDebug() << "ParameterPanel: Apply Sharpen Filter requested.";
     emit sharpenFilterRequested();
 }
 
 void ParameterPanel::onStartRegistration() {
+    Q_D(ParameterPanel);
     qDebug() << "ParameterPanel: Start Registration requested. Fixed: " << d->currentFixedImageFile << " Moving: " << d->currentMovingImageFile << " Algo: " << d->currentRegAlgorithm;
     if (d->currentFixedImageFile.isEmpty() || d->currentMovingImageFile.isEmpty()) {
         qDebug() << "Fixed or Moving image not set.";
         // Optionally show a message to the user
         return;
     }
-    // Emit individual changes first if they haven't been
-    // emit fixedImageChanged(d->currentFixedImageFile);
-    // emit movingImageChanged(d->currentMovingImageFile);
-    // emit registrationAlgorithmChanged(d->currentRegAlgorithm);
     
     // Then emit the combined signal for parameters
     emit registrationParametersChanged(d->currentFixedImageFile, d->currentMovingImageFile, d->currentRegAlgorithm);
@@ -1080,6 +1183,8 @@ void ParameterPanel::onStartRegistration() {
 }
 
 void ParameterPanel::onResetRegistration() {
+
+    Q_D(ParameterPanel);
     qDebug() << "ParameterPanel: Reset Registration requested.";
     // Clear file paths and reset algorithm in UI and internal state
     setFixedImageFile("");
@@ -1095,9 +1200,11 @@ void ParameterPanel::onResetRegistration() {
 }
 
 void ParameterPanel::onClearMeasurements() {
+    Q_D(ParameterPanel);
+    
     qDebug() << "ParameterPanel: Clear Measurements requested.";
     if (d->measurementResultLabel) d->measurementResultLabel->setText("测量结果已清除");
     emit clearMeasurementsRequested();
 }
 
-} // namespace MedicalImaging
+}// namespace MedicalImaging

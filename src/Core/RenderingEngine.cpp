@@ -8,7 +8,10 @@
 #include <vtkCamera.h>
 #include <vtkSmartPointer.h>
 
-class RenderingEngine::RenderingEnginePrivate {
+class RenderingEngine::RenderingEnginePrivate : public QObject {
+    Q_OBJECT // 添加 Q_OBJECT 宏以启用信号和槽机制
+
+    // 私有成员变量可以在这里声明
 public:
     vtkSmartPointer<vtkRenderer> renderer;
     vtkSmartPointer<vtkRenderWindow> renderWindow;

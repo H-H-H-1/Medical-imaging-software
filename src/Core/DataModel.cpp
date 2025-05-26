@@ -3,7 +3,8 @@
 #include <vtkMatrix4x4.h>
 #include <vtkSmartPointer.h>
 
-class DataModel::DataModelPrivate {
+class DataModel::DataModelPrivate: public QObject {
+    Q_OBJECT // 添加 Q_OBJECT{
 public:
     vtkSmartPointer<vtkImageData> imageData;
     vtkSmartPointer<vtkMatrix4x4> transformMatrix;
