@@ -6,7 +6,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QMessageBox>
-#pragma comment(lib, "user32.lib")
+
 
 int main(int argc, char *argv[])
 {

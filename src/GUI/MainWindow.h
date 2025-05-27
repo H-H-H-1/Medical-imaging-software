@@ -45,7 +45,7 @@ private slots:
 private:
     void setupUI();
     void setupMenuBar();
-    void setupToolBar();
+    // void setupToolBar();
     void setupStatusBar();
     void setupConnections();
     void updateUI();

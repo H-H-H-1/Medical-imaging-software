@@ -5,7 +5,10 @@ add_subdirectory(GUI)
 add_subdirectory(Plugins)
 
 # 创建可执行文件
-add_executable(MedicalImagingSoftware main.cpp)
+add_executable(MedicalImagingSoftware 
+main.cpp
+)
+
 
 # 设置Qt MOC处理
 set_target_properties(MedicalImagingSoftware PROPERTIES
