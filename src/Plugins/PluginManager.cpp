@@ -1,4 +1,4 @@
-﻿#include "PluginManager.h"
+#include "PluginManager.h"
 #include "PluginInterface.h"
 #include <QPluginLoader>
 #include <QDir>
@@ -16,13 +16,13 @@ struct PluginManager::Impl {
     QString lastError;
     
     Impl() {
-        // 榛樿鎻掍欢鐩綍
+        // 默认插件目录
         pluginDirectories << QCoreApplication::applicationDirPath() + "/plugins"
                          << QCoreApplication::applicationDirPath() + "/extensions";
     }
     
     ~Impl() {
-        // 娓呯悊鎵€鏈夊姞杞界殑鎻掍欢
+        // 清理所有加载的插件
         for (auto loader : loadedPlugins) {
             if (loader) {
                 loader->unload();
@@ -46,15 +46,15 @@ PluginManager::~PluginManager() = default;
 bool PluginManager::loadPlugin(const QString& filePath) {
     QFileInfo fileInfo(filePath);
     if (!fileInfo.exists()) {
-        d->lastError = QString("鎻掍欢鏂囦欢涓嶅瓨鍦? %1").arg(filePath);
+        d->lastError = QString("插件文件不存在: %1").arg(filePath);
         return false;
     }
 
     QString pluginName = fileInfo.baseName();
     
-    // 妫€鏌ユ槸鍚﹀凡缁忓姞杞?
+    // 检查是否已经加载
     if (d->loadedPlugins.contains(pluginName)) {
-        d->lastError = QString("鎻掍欢宸茬粡鍔犺浇: %1").arg(pluginName);
+        d->lastError = QString("插件已经加载: %1").arg(pluginName);
         return false;
     }
 
@@ -65,28 +65,28 @@ bool PluginManager::loadPlugin(const QString& filePath) {
         return false;
     }
 
-    // 鍔犺浇鎻掍欢
+    // 加载插件
     QObject* pluginObject = loader->instance();
     if (!pluginObject) {
-        d->lastError = QString("鏃犳硶瀹炰緥鍖栨彃浠? %1 - %2")
+        d->lastError = QString("无法实例化插件: %1 - %2")
                       .arg(pluginName)
                       .arg(loader->errorString());
         delete loader;
         return false;
     }
 
-    // 灏濊瘯杞崲涓烘彃浠舵帴鍙?
+    // 尝试转换为插件接口
     auto plugin = qobject_cast<PluginInterface*>(pluginObject);
     if (!plugin) {
-        d->lastError = QString("鎻掍欢涓嶅疄鐜癙luginInterface鎺ュ彛: %1").arg(pluginName);
+        d->lastError = QString("插件不实现PluginInterface接口: %1").arg(pluginName);
         loader->unload();
         delete loader;
         return false;
     }
 
-    // 鍒濆鍖栨彃浠?
+    // 初始化插件
     if (!plugin->initialize()) {
-        d->lastError = QString("鎻掍欢鍒濆鍖栧け璐? %1 - %2")
+        d->lastError = QString("插件初始化失败: %1 - %2")
                       .arg(pluginName)
                       .arg(plugin->getLastError());
         loader->unload();
@@ -94,7 +94,7 @@ bool PluginManager::loadPlugin(const QString& filePath) {
         return false;
     }
 
-    // 娉ㄥ唽鎻掍欢
+    // 注册插件
     d->loadedPlugins[pluginName] = loader;
     d->pluginInterfaces[pluginName] = plugin;
     
@@ -102,14 +102,14 @@ bool PluginManager::loadPlugin(const QString& filePath) {
     
     emit pluginLoaded(pluginName);
     
-    qDebug() << "鎻掍欢鍔犺浇鎴愬姛:" << pluginName;
+    qDebug() << "插件加载成功:" << pluginName;
     return true;
 }
 
 bool PluginManager::loadPluginsFromDirectory(const QString& directory) {
     QDir dir(directory);
     if (!dir.exists()) {
-        d->lastError = QString("鎻掍欢鐩綍涓嶅瓨鍦? %1").arg(directory);
+        d->lastError = QString("插件目录不存在: %1").arg(directory);
         return false;
     }
 
@@ -127,8 +127,8 @@ bool PluginManager::loadPluginsFromDirectory(const QString& directory) {
     
     bool hasSuccess = false;
     for (const QString& fileName : pluginFiles) {
-        QString filePath = dir.absoluteFilePath(fileName);
-        if (loadPlugin(filePath)) {
+        QString fullPath = dir.absoluteFilePath(fileName);
+        if (loadPlugin(fullPath)) {
             hasSuccess = true;
         }
     }
@@ -138,13 +138,14 @@ bool PluginManager::loadPluginsFromDirectory(const QString& directory) {
 
 void PluginManager::unloadPlugin(const QString& pluginName) {
     if (!d->loadedPlugins.contains(pluginName)) {
+        d->lastError = QString("插件未加载: %1").arg(pluginName);
         return;
     }
 
-    // 娓呯悊鎻掍欢
+    // 清理插件
     cleanupPlugin(pluginName);
     
-    // 鍗歌浇鎻掍欢
+    // 卸载插件
     auto loader = d->loadedPlugins[pluginName];
     if (loader) {
         loader->unload();
@@ -156,7 +157,7 @@ void PluginManager::unloadPlugin(const QString& pluginName) {
     
     emit pluginUnloaded(pluginName);
     
-    qDebug() << "鎻掍欢鍗歌浇:" << pluginName;
+    qDebug() << "插件卸载:" << pluginName;
 }
 
 void PluginManager::unloadAllPlugins() {
@@ -196,8 +197,8 @@ PluginInterface* PluginManager::getPlugin(const QString& name) const {
 QList<ImageProcessingPlugin*> PluginManager::getImageProcessingPlugins() const {
     QList<ImageProcessingPlugin*> plugins;
     for (auto plugin : d->pluginInterfaces) {
-        if (auto imagePlugin = qobject_cast<ImageProcessingPlugin*>(plugin)) {
-            plugins.append(imagePlugin);
+        if (auto imgPlugin = qobject_cast<ImageProcessingPlugin*>(plugin)) {
+            plugins.append(imgPlugin);
         }
     }
     return plugins;
@@ -206,8 +207,8 @@ QList<ImageProcessingPlugin*> PluginManager::getImageProcessingPlugins() const {
 QList<VisualizationPlugin*> PluginManager::getVisualizationPlugins() const {
     QList<VisualizationPlugin*> plugins;
     for (auto plugin : d->pluginInterfaces) {
-        if (auto vizPlugin = qobject_cast<VisualizationPlugin*>(plugin)) {
-            plugins.append(vizPlugin);
+        if (auto visPlugin = qobject_cast<VisualizationPlugin*>(plugin)) {
+            plugins.append(visPlugin);
         }
     }
     return plugins;
@@ -226,10 +227,10 @@ QList<MeasurementPlugin*> PluginManager::getMeasurementPlugins() const {
 QString PluginManager::getPluginInfo(const QString& name) const {
     auto plugin = getPlugin(name);
     if (!plugin) {
-        return QString();
+        return QString("插件未找到: %1").arg(name);
     }
     
-    return QString("鍚嶇О: %1\n鐗堟湰: %2\n浣滆€? %3\n鎻忚堪: %4")
+    return QString("名称: %1\n版本: %2\n作者: %3\n描述: %4")
            .arg(plugin->getName())
            .arg(plugin->getVersion())
            .arg(plugin->getAuthor())
@@ -275,6 +276,7 @@ void PluginManager::refreshPlugins() {
 
 void PluginManager::reloadPlugin(const QString& pluginName) {
     if (!d->loadedPlugins.contains(pluginName)) {
+        d->lastError = QString("插件未加载，无法重载: %1").arg(pluginName);
         return;
     }
     
@@ -285,12 +287,12 @@ void PluginManager::reloadPlugin(const QString& pluginName) {
 
 bool PluginManager::validatePlugin(QPluginLoader* loader) const {
     if (!loader) {
-        d->lastError = "鏃犳晥鐨勬彃浠跺姞杞藉櫒";
+        d->lastError = "无效的插件加载器";
         return false;
     }
 
     if (!loader->load()) {
-        d->lastError = QString("鏃犳硶鍔犺浇鎻掍欢搴? %1").arg(loader->errorString());
+        d->lastError = QString("无法加载插件库: %1").arg(loader->errorString());
         return false;
     }
 
@@ -302,8 +304,8 @@ void PluginManager::setupPluginInterface(PluginInterface* plugin) {
         return;
     }
     
-    // 杩欓噷鍙互璁剧疆鎻掍欢鐨勪竴浜涢€氱敤灞炴€ф垨鍥炶皟
-    // 渚嬪鏃ュ織璁板綍銆侀敊璇鐞嗙瓑
+    // 这里可以设置插件的一些通用属性或回调
+    // 例如日志记录、错误处理等
 }
 
 void PluginManager::cleanupPlugin(const QString& pluginName) {

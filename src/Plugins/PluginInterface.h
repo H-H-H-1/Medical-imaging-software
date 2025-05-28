@@ -11,9 +11,9 @@ class vtkImageData;
 namespace MedicalImaging {
 
 /**
- * @brief 鎻掍欢鎺ュ彛鍩虹被
+ * @brief 插件接口基类
  * 
- * 瀹氫箟鍖诲鎴愬儚杞欢鎻掍欢鐨勬爣鍑嗘帴鍙?
+ * 定义医学成像软件插件的标准接口
  */
 class PluginInterface : public QObject {
     Q_OBJECT
@@ -21,7 +21,7 @@ class PluginInterface : public QObject {
 public:
     virtual ~PluginInterface() = default;
 
-    // 鎻掍欢鍩烘湰淇℃伅
+    // 插件基本信息
     virtual QString getName() const = 0;
     virtual QString getVersion() const = 0;
     virtual QString getDescription() const = 0;
@@ -35,7 +35,7 @@ public:
 };
 
 /**
- * @brief 鍥惧儚澶勭悊鎻掍欢鎺ュ彛
+ * @brief 图像处理插件接口
  */
 class ImageProcessingPlugin : public PluginInterface {
     Q_OBJECT
@@ -43,7 +43,7 @@ class ImageProcessingPlugin : public PluginInterface {
 public:
     virtual ~ImageProcessingPlugin() = default;
     
-    // 鍥惧儚澶勭悊鐗瑰畾鏂规硶
+    // 图像处理特定方法
     virtual QStringList getSupportedFormats() const = 0;
     virtual bool hasPreview() const = 0;
     virtual vtkImageData* generatePreview(vtkImageData* input) = 0;
@@ -55,7 +55,7 @@ signals:
 };
 
 /**
- * @brief 鍙鍖栨彃浠舵帴鍙?
+ * @brief 可视化插件接口
  */
 class VisualizationPlugin : public PluginInterface {
     Q_OBJECT
@@ -63,7 +63,7 @@ class VisualizationPlugin : public PluginInterface {
 public:
     virtual ~VisualizationPlugin() = default;
     
-    // 鍙鍖栫壒瀹氭柟娉?
+    // 可视化特定方法
     virtual QString getRenderingType() const = 0;
     virtual bool supportsInteraction() const = 0;
     virtual void setRenderWindow(void* renderWindow) = 0;
@@ -76,7 +76,7 @@ signals:
 };
 
 /**
- * @brief 娴嬮噺鎻掍欢鎺ュ彛
+ * @brief 测量插件接口
  */
 class MeasurementPlugin : public PluginInterface {
     Q_OBJECT
@@ -84,7 +84,7 @@ class MeasurementPlugin : public PluginInterface {
 public:
     virtual ~MeasurementPlugin() = default;
     
-    // 娴嬮噺鐗瑰畾鏂规硶
+    // 测量特定方法
     virtual QStringList getMeasurementTypes() const = 0;
     virtual QString getUnit() const = 0;
     virtual double performMeasurement(const QString& type, vtkImageData* data) = 0;
@@ -96,7 +96,7 @@ signals:
 
 } // namespace MedicalImaging
 
-// 娉ㄥ唽鎺ュ彛锛岃Qt鐨勫厓瀵硅薄绯荤粺鑳借瘑鍒?
+// 注册接口，让Qt的元对象系统能识别
 Q_DECLARE_INTERFACE(MedicalImaging::PluginInterface, "MedicalImaging.PluginInterface/1.0")
 
 #endif // PLUGININTERFACE_H
